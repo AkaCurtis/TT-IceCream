@@ -8,8 +8,8 @@
 </head>
 <body>
 	<div id="tracker">
-		<div id="header">🍦Ice Cream Tracker</div>
-		<div class="count-line" id="icecream-count">🍦 Ice Creams Held: Loading...</div>
+		<div id="header">🎯 Tracker</div>
+		<div class="count-line" id="icecream-count">🍦 Ice Creams: Loading...</div>
 		<div class="count-line" id="chest-count">🎁 Summer Chests: Loading...</div>
 		<div class="count-line" id="icecream-sold" style="display: none;">🧾 Ice Creams Sold: 0</div>
 
@@ -24,24 +24,25 @@
 				<input type="checkbox" id="debug-toggle" />
 				Toggle Debug Log
 			</label>
+			<label style="font-size: 14px; display: flex; align-items: center; gap: 6px; margin-top: 6px;">
+				<input type="checkbox" id="chests-toggle" />
+				Enable Chests Opening Mode
+			</label>
 		</div>
 
-		<div id="debug-console" style="
-			font-size: 12px;
-			color: #bbb;
-			margin-top: 10px;
-			max-height: 60px;
-			overflow-y: auto;
-			white-space: pre-wrap;
-			background: rgba(0, 0, 0, 0.3);
-			padding: 6px;
-			border-radius: 6px;
-			display: none;
-			user-select: text;
-		"></div>
-
+		<div id="debug-console"></div>
 		<div id="resize-handle"></div>
 	</div>
+
+	<div id="chest-ui">
+		<div id="chest-ui-header" style="font-weight: 600; color: #90caff; cursor: move;">
+			📦 Chest Rewards
+		</div>
+		<div id="chest-ui-list" style="margin-top: 6px;"></div>
+		<button id="clear-chest-log" style="margin-top: 6px; font-size: 12px;">Clear List</button>
+	</div>
+
+
 	<script src="script.js"></script>
 </body>
 </html>
