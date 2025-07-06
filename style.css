@@ -1,0 +1,95 @@
+body {
+	margin: 0;
+	padding: 0;
+	font-family: 'Segoe UI', sans-serif;
+	background-color: transparent;
+}
+
+#tracker {
+	position: absolute;
+	top: 100px;
+	left: 100px;
+	min-width: 220px;
+	min-height: 140px;
+	width: fit-content;
+	height: fit-content;
+	background: rgba(20, 20, 20, 0.95);
+	border: 2px solid #4dabf7;
+	border-radius: 12px;
+	padding: 16px;
+	box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+	overflow: auto;
+	user-select: none;
+	color: #f0f0f0;
+	cursor: default;
+	resize: none;
+}
+
+#header {
+	font-weight: bold;
+	color: #4dabf7;
+	margin-bottom: 10px;
+	font-size: 18px;
+	cursor: move;
+}
+
+.count-line {
+	font-size: 16px;
+	color: #ffffff;
+	margin: 4px 0;
+}
+
+#resize-handle {
+	position: absolute;
+	width: 16px;
+	height: 16px;
+	right: 2px;
+	bottom: 2px;
+	cursor: se-resize;
+	z-index: 10;
+}
+
+#resize-handle::after {
+	content: "";
+	display: block;
+	width: 100%;
+	height: 100%;
+	background: linear-gradient(135deg, #4dabf7 25%, transparent 25%, transparent 50%, #4dabf7 50%, #4dabf7 75%, transparent 75%, transparent);
+	background-size: 6px 6px;
+	opacity: 0.3;
+}
+
+#debug-console::-webkit-scrollbar {
+	width: 6px;
+}
+
+#debug-console::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+#debug-console::-webkit-scrollbar-thumb {
+	background-color: #4dabf7;
+	border-radius: 4px;
+}
+
+#debug-console::-webkit-scrollbar-thumb:hover {
+	background-color: #1c8ce0;
+}
+
+#tracker::-webkit-scrollbar {
+	width: 6px;
+	height: 6px;
+}
+
+#tracker::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+#tracker::-webkit-scrollbar-thumb {
+	background-color: #4dabf7;
+	border-radius: 10px;
+}
+
+#tracker::-webkit-scrollbar-thumb:hover {
+	background-color: #1c8ce0;
+}
