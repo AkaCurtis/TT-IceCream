@@ -1,8 +1,8 @@
-body {
+html, body {
+	background: transparent !important;
 	margin: 0;
 	padding: 0;
 	font-family: 'Segoe UI', sans-serif;
-	background-color: transparent;
 }
 
 #tracker {
@@ -10,33 +10,57 @@ body {
 	top: 100px;
 	left: 100px;
 	min-width: 220px;
-	min-height: 140px;
-	width: fit-content;
-	height: fit-content;
-	background: rgba(20, 20, 20, 0.95);
-	border: 2px solid #4dabf7;
-	border-radius: 12px;
-	padding: 16px;
-	box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-	overflow: auto;
-	user-select: none;
-	color: #f0f0f0;
+	background: rgba(15, 15, 15, 0.75);
+	border: 1px solid rgba(100, 150, 255, 0.15);
+	border-radius: 10px;
+	padding: 14px 16px;
+	box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
+	color: #e0e0e0;
 	cursor: default;
+	user-select: none;
 	resize: none;
+	width: fit-content;
 }
 
 #header {
-	font-weight: bold;
-	color: #4dabf7;
-	margin-bottom: 10px;
-	font-size: 18px;
+	font-weight: 600;
+	color: #90caff;
+	margin-bottom: 12px;
+	font-size: 16px;
 	cursor: move;
+	letter-spacing: 0.5px;
 }
 
 .count-line {
-	font-size: 16px;
-	color: #ffffff;
+	font-size: 14px;
+	color: #ddd;
 	margin: 4px 0;
+}
+
+#settings-toggle {
+	background: rgba(255, 255, 255, 0.05);
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	border-radius: 6px;
+	padding: 6px 12px;
+	color: #ccc;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	font-size: 13px;
+	margin-top: 10px;
+}
+
+#settings-toggle:hover {
+	background: rgba(255, 255, 255, 0.1);
+	color: #fff;
+}
+
+#settings-panel label {
+	color: #ccc;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin-top: 6px;
+	font-size: 14px;
 }
 
 #resize-handle {
@@ -56,40 +80,108 @@ body {
 	height: 100%;
 	background: linear-gradient(135deg, #4dabf7 25%, transparent 25%, transparent 50%, #4dabf7 50%, #4dabf7 75%, transparent 75%, transparent);
 	background-size: 6px 6px;
-	opacity: 0.3;
+	opacity: 0.15;
 }
 
-#debug-console::-webkit-scrollbar {
+#debug-console {
+	font-size: 12px;
+	color: #bbb;
+	margin-top: 10px;
+	max-height: 80px;
+	overflow-y: auto;
+	white-space: pre-wrap;
+	background: rgba(255, 255, 255, 0.03);
+	padding: 8px;
+	border-radius: 6px;
+	display: none;
+	user-select: text;
+	border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+#chest-ui {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	background: rgba(15, 15, 15, 0.75);
+	color: #baf7ba;
+	font-size: 13px;
+	padding: 16px 18px;
+	border: 1px solid rgba(100, 150, 255, 0.15);
+	border-radius: 10px;
+	box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
+	overflow-y: auto;
+	display: none;
+	user-select: text;
+	z-index: 100;
+	width: auto;
+	max-width: 280px;
+	resize: none;
+	text-align: center;
+}
+
+#chest-ui-header {
+	font-weight: 600;
+	color: #90caff;
+	margin-bottom: 10px;
+	cursor: move;
+	display: inline-block;
+	font-size: 15px;
+}
+
+#chest-ui-list {
+	max-height: 220px;
+	overflow-y: auto;
+	text-align: left;
+	padding-right: 4px;
+	cursor: default;
+
+}
+
+#chest-ui-list div {
+	background: rgba(255, 255, 255, 0.03);
+	border: 1px solid rgba(255, 255, 255, 0.05);
+	padding: 6px 10px;
+	border-radius: 6px;
+	margin-bottom: 6px;
+	color: #c4f7c4;
+	font-size: 13px;
+	text-shadow: 0 0 2px rgba(0,0,0,0.6);
+}
+
+#clear-chest-log {
+	margin-top: 10px;
+	background: rgba(255, 255, 255, 0.05);
+	color: #ccc;
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	border-radius: 6px;
+	padding: 4px 8px;
+	font-size: 12px;
+	cursor: pointer;
+	transition: background 0.2s ease;
+}
+
+#clear-chest-log:hover {
+	background: rgba(255, 255, 255, 0.12);
+	color: #fff;
+}
+
+#debug-console::-webkit-scrollbar,
+#chest-ui::-webkit-scrollbar {
 	width: 6px;
 }
 
-#debug-console::-webkit-scrollbar-track {
-	background: transparent;
-}
-
-#debug-console::-webkit-scrollbar-thumb {
-	background-color: #4dabf7;
-	border-radius: 4px;
-}
-
-#debug-console::-webkit-scrollbar-thumb:hover {
-	background-color: #1c8ce0;
-}
-
-#tracker::-webkit-scrollbar {
-	width: 6px;
-	height: 6px;
-}
-
-#tracker::-webkit-scrollbar-track {
-	background: transparent;
-}
-
-#tracker::-webkit-scrollbar-thumb {
+#debug-console::-webkit-scrollbar-thumb,
+#chest-ui::-webkit-scrollbar-thumb {
 	background-color: #4dabf7;
 	border-radius: 10px;
 }
 
-#tracker::-webkit-scrollbar-thumb:hover {
-	background-color: #1c8ce0;
+#chest-ui-list::-webkit-scrollbar {
+	width: 6px;
+}
+
+#chest-ui-list::-webkit-scrollbar-thumb {
+	background-color: rgba(77, 171, 247, 0.6);
+	border-radius: 8px;
 }
