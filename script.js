@@ -4,55 +4,137 @@ const chestDisplay = document.getElementById("chest-count");
 const soldDisplay = document.getElementById("icecream-sold");
 const debugConsole = document.getElementById("debug-console");
 const resizeHandle = document.getElementById("resize-handle");
-const chestUI = document.getElementById("chest-ui");
-const chestUIList = document.getElementById("chest-ui-list");
-const clearChestLogBtn = document.getElementById("clear-chest-log");
-const chestHeader = document.getElementById("chest-ui-header");
 const settingsToggleBtn = document.getElementById("settings-toggle");
 const settingsPanel = document.getElementById("settings-panel");
 const sellingToggle = document.getElementById("selling-toggle");
 const debugToggle = document.getElementById("debug-toggle");
 const chestsToggle = document.getElementById("chests-toggle");
+const sellerTitleDisplay = document.getElementById("seller-title");
+
+if (sellerTitleDisplay) {
+  sellerTitleDisplay.style.fontSize = "13px";
+  sellerTitleDisplay.style.color = "#aaa";
+  sellerTitleDisplay.style.marginTop = "4px";
+}
 
 let totalSold = null;
 let sellingMode = false;
-let chestItems = {};
 let summerChestCount = 0;
 let chestOpeningActive = false;
 
+const SELLER_TITLES = [
+  { amount: 10, title: "🍦 Vanilla Swirl 🍦" },
+  { amount: 50, title: "🍦 Neapolitan 🍦" },
+  { amount: 75, title: "🍫 Chocolate Chip 🍫" },
+  { amount: 150, title: "Scoop there it is!" },
+  { amount: 250, title: "🧊 Brain Freeze 🧊" },
+  { amount: 500, title: "🍍 Tropical Twist 🍍" },
+  { amount: 1000, title: "🏆 Summer Legend 🏆" }
+];
+
 function logDebug(msg) {
-	if (debugToggle.checked) {
-		document.getElementById("debug-console").style.display = "block";
-		document.getElementById("debug-console").textContent += msg + "\n";
-		document.getElementById("debug-console").scrollTop = debugConsole.scrollHeight;
-	}
+  if (debugToggle.checked) {
+    debugConsole.style.display = "block";
+    debugConsole.textContent += msg + "\n";
+    debugConsole.scrollTop = debugConsole.scrollHeight;
+  }
 }
 
 function sleep(ms) {
-	return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function sleepUntil(predicate, interval = 50, timeout = 5000) {
+  return new Promise((resolve, reject) => {
+    const start = Date.now();
+    const check = () => {
+      if (predicate()) return resolve();
+      if (Date.now() - start >= timeout) return reject("Timeout");
+      setTimeout(check, interval);
+    };
+    check();
+  });
 }
 
 async function openChestsLoop() {
-	while (chestOpeningActive && summerChestCount > 0) {
-		window.parent.postMessage({
-			type: "sendCommand",
-			command: "item chest_summer25 open"
-		}, "*");
-		logDebug(`🗝️ Sent open command. Remaining: ${summerChestCount}`);
-		summerChestCount--;
-		await sleep(1500);
-	}
+  logDebug("⚡ Starting menu-based open sequence...");
+
+  window.parent.postMessage({ type: "sendCommand", command: "rm_inventory" }, "*");
+  logDebug("📡 Sent rm_inventory. Waiting for menu choices to populate...");
+  await sleep(500);
+
+  let success = false;
+  let attempts = 0;
+
+  while (!success && attempts < 2) {
+    attempts++;
+    try {
+      await sleepUntil(() => {
+        const choices = window.state?.cache?.menu_choices ?? [];
+        return choices.some(choice =>
+          choice[0]?.replace(/(<.+?>)|(&#.+?;)/g, '') === 'Treasure Chest [Summer 2025]'
+        );
+      }, 40, 4000);
+
+      const targetOption = (window.state.cache.menu_choices ?? []).find(
+        c => c[0]?.replace(/(<.+?>)|(&#.+?;)/g, '') === 'Treasure Chest [Summer 2025]'
+      )?.[0];
+
+      if (targetOption) {
+        logDebug("✅ Found chest menu option: " + targetOption);
+        window.parent.postMessage({ type: "forceMenuChoice", choice: targetOption, mod: 0 }, "*");
+        logDebug("✅ Selected Summer Chest. Waiting for submenu...");
+
+        await sleepUntil(() => {
+          const submenu = window.state?.cache?.menu_choices ?? [];
+          return submenu.length > 0 && submenu.some(c => /open/i.test(c[0]));
+        }, 40, 4000);
+
+        await sleep(300);
+
+        const submenuChoice = (window.state.cache.menu_choices ?? []).find(c =>
+          /open/i.test(c[0])
+        )?.[0];
+
+        if (submenuChoice) {
+          window.parent.postMessage({ type: "forceMenuChoice", choice: submenuChoice, mod: -1 }, "*");
+          logDebug("🎉 Sent 'Open' submenu click to chest.");
+          success = true;
+        } else {
+          logDebug("⚠️ 'Open' option was not found in submenu.");
+        }
+      } else {
+        logDebug("❌ Option not found after condition passed?");
+      }
+    } catch (e) {
+      logDebug(`❌ Attempt ${attempts} failed: ${e}`);
+      await sleep(1000);
+    }
+  }
+
+  if (!success) {
+    logDebug("❌ Failed to open Summer 2025 Chest after retries.");
+  }
 }
+
+
 
 function updateSoldDisplay() {
-	soldDisplay.textContent = `🧾 Ice Creams Sold: ${totalSold}`;
+  soldDisplay.textContent = `🧾 Ice Creams Sold: ${totalSold}`;
+  if (sellerTitleDisplay) {
+    const next = SELLER_TITLES.find(t => totalSold < t.amount);
+    if (next) {
+      const remaining = next.amount - totalSold;
+      sellerTitleDisplay.textContent = `Next Title: ${next.title} (${remaining} more)`;
+      sellerTitleDisplay.style.display = "block";
+    } else {
+      sellerTitleDisplay.textContent = `🌟 You are a ${SELLER_TITLES[SELLER_TITLES.length - 1].title}!`;
+      sellerTitleDisplay.style.display = "block";
+    }
+  }
 }
 
-function updateChestLog() {
-	chestUIList.innerHTML = Object.entries(chestItems)
-		.map(([item, count]) => `<div>${item} x${count}</div>`)
-		.join('');
-}
+
 
 const savedX = localStorage.getItem("tracker_x");
 const savedY = localStorage.getItem("tracker_y");
@@ -61,28 +143,23 @@ if (savedX && savedY) {
 	tracker.style.top = savedY + "px";
 }
 
-const savedChestX = localStorage.getItem("chest_x");
-const savedChestY = localStorage.getItem("chest_y");
-if (savedChestX && savedChestY) {
-	chestUI.style.left = savedChestX + "px";
-	chestUI.style.top = savedChestY + "px";
-}
-
 sellingToggle.checked = localStorage.getItem("selling_mode") === "true";
 sellingMode = sellingToggle.checked;
 soldDisplay.style.display = sellingMode ? "block" : "none";
+sellerTitleDisplay.style.display = sellingMode ? "block" : "none";
 
 debugToggle.checked = localStorage.getItem("debug_enabled") === "true";
 debugConsole.style.display = debugToggle.checked ? "block" : "none";
 
 chestsToggle.checked = localStorage.getItem("chests_enabled") === "true";
-chestUI.style.display = chestsToggle.checked ? "block" : "none";
 
 sellingToggle.addEventListener("change", (e) => {
 	sellingMode = e.target.checked;
 	localStorage.setItem("selling_mode", sellingMode);
 	soldDisplay.style.display = sellingMode ? "block" : "none";
+	sellerTitleDisplay.style.display = sellingMode ? "block" : "none";
 });
+
 
 debugToggle.addEventListener("change", (e) => {
 	localStorage.setItem("debug_enabled", e.target.checked);
@@ -92,7 +169,6 @@ debugToggle.addEventListener("change", (e) => {
 chestsToggle.addEventListener("change", async (e) => {
 	const enabled = e.target.checked;
 	localStorage.setItem("chests_enabled", enabled);
-	chestUI.style.display = enabled ? "block" : "none";
 
 	if (enabled) {
 		chestOpeningActive = true;
@@ -100,11 +176,6 @@ chestsToggle.addEventListener("change", async (e) => {
 	} else {
 		chestOpeningActive = false;
 	}
-});
-
-clearChestLogBtn.addEventListener("click", () => {
-	chestItems = {};
-	updateChestLog();
 });
 
 settingsToggleBtn.addEventListener("click", () => {
@@ -123,13 +194,6 @@ tracker.addEventListener("mousedown", (e) => {
 		offsetY = e.clientY - tracker.offsetTop;
 		tracker.style.cursor = "grabbing";
 	}
-});
-
-chestHeader.addEventListener("mousedown", (e) => {
-	isChestDragging = true;
-	chestOffsetX = e.clientX - chestUI.offsetLeft;
-	chestOffsetY = e.clientY - chestUI.offsetTop;
-	chestUI.style.cursor = "grabbing";
 });
 
 document.addEventListener("mouseup", () => {
@@ -181,53 +245,67 @@ window.addEventListener("keydown", (e) => {
 });
 
 window.addEventListener("message", (event) => {
-	const msg = event.data;
+  const msg = event.data?.data;
 
-	if (!window._initialDumped && typeof msg === "object") {
-		logDebug("\uD83E\uDDEA Full getData payload:\n" + JSON.stringify(msg, null, 2));
-		window._initialDumped = true;
-	}
+  if (!window.state) window.state = { cache: {} };
 
-	let invString = msg.inventory || msg?.data?.inventory || msg?.payload?.inventory;
-	if (typeof invString === "string") {
-		try {
-			const inv = JSON.parse(invString);
-			const ice = inv["icecream_2025"]?.amount || 0;
-			const chests = inv["chest_summer25"]?.amount || 0;
-			icecreamDisplay.textContent = `🍦 Ice Creams: ${ice}`;
-			chestDisplay.textContent = `🎁 Summer Chests: ${chests}`;
-			summerChestCount = chests;
-		} catch {
-			icecreamDisplay.textContent = "⚠️ Inventory Error!";
-			chestDisplay.textContent = "";
-		}
-	}
+  if (!window._initialDumped && typeof msg === "object") {
+    window._initialDumped = true;
+  }
 
-	if (msg?.data?.notification) {
-		const note = msg.data.notification;
-		logDebug("\uD83D\uDCEC Notification field: " + note);
+  if (typeof msg === "object") {
+    for (const [key, value] of Object.entries(msg)) {
+      if (key === 'menu_choices') {
+        try {
+          const parsed = JSON.parse(value ?? '[]');
+          window.state.cache.menu_choices = parsed;
+          const readable = parsed.map(c => c[0]).join(" | ");
+          logDebug("📋 menu_choices received: " + readable);
+        } catch {
+          window.state.cache.menu_choices = [];
+          logDebug("⚠️ Failed to parse menu_choices.");
+        }
 
-		if (sellingMode) {
-			const match = note.match(/Total sold: (\d+)/);
-			if (match) {
-				const sold = parseInt(match[1]);
-				totalSold = totalSold === null ? sold : Math.max(totalSold + 1, sold);
-				updateSoldDisplay();
-			}
-		}
+      } else if (key === 'menu_open') {
+        window.state.cache.menu_open = value;
+        logDebug(value ? "📂 Menu has opened." : "📪 Menu closed.");
+      
+      } else {
+        window.state.cache[key] = value;
+      }
+    }
+  }
 
-		if (chestsToggle.checked) {
-			const match = note.match(/Received (\d+) ~g~(.+?)~s~/);
-			if (match) {
-				const qty = parseInt(match[1]);
-				let item = match[2].trim();
-				item = item.replace(/<\/?[^>]+>/g, '').replace(/&#(\d+);/g, (_, code) => String.fromCharCode(code)).replace(/~[a-z]~/gi, '');
-				chestItems[item] = (chestItems[item] || 0) + qty;
-				updateChestLog();
-			}
-		}
-	}
+  let invString = msg?.inventory || msg?.data?.inventory || msg?.payload?.inventory;
+  if (typeof invString === "string") {
+    try {
+      const inv = JSON.parse(invString);
+      const ice = inv["icecream_2025"]?.amount || 0;
+      const chests = inv["chest_summer25"]?.amount || 0;
+      icecreamDisplay.textContent = `🍦 Ice Creams: ${ice}`;
+      chestDisplay.textContent = `🎁 Summer Chests: ${chests}`;
+      summerChestCount = chests;
+    } catch {
+      icecreamDisplay.textContent = "⚠️ Inventory Error!";
+      chestDisplay.textContent = "";
+    }
+  }
+
+  if (msg?.data?.notification) {
+    const note = msg.data.notification;
+    logDebug("📨 Notification field: " + note);
+
+    if (sellingMode) {
+      const match = note.match(/Total sold: (\d+)/);
+      if (match) {
+        const sold = parseInt(match[1]);
+        totalSold = totalSold === null ? sold : Math.max(totalSold + 1, sold);
+        updateSoldDisplay();
+      }
+    }
+  }
 });
+
 
 window.addEventListener("DOMContentLoaded", () => {
 	window.parent.postMessage({ type: "getData" }, "*");
