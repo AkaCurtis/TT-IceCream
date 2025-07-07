@@ -204,13 +204,6 @@ document.addEventListener("mouseup", () => {
 	isDragging = false;
 	tracker.style.cursor = "grab";
 
-	if (isChestDragging) {
-		localStorage.setItem("chest_x", chestUI.offsetLeft);
-		localStorage.setItem("chest_y", chestUI.offsetTop);
-	}
-	isChestDragging = false;
-	chestUI.style.cursor = "grab";
-
 	isResizing = false;
 });
 
@@ -218,10 +211,6 @@ document.addEventListener("mousemove", (e) => {
 	if (isDragging) {
 		tracker.style.left = `${e.clientX - offsetX}px`;
 		tracker.style.top = `${e.clientY - offsetY}px`;
-	}
-	if (isChestDragging) {
-		chestUI.style.left = `${e.clientX - chestOffsetX}px`;
-		chestUI.style.top = `${e.clientY - chestOffsetY}px`;
 	}
 	if (isResizing) {
 		tracker.style.width = startWidth + (e.clientX - startX) + "px";
