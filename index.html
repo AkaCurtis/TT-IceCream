@@ -8,10 +8,13 @@
 </head>
 <body>
 	<div id="tracker">
-		<div id="header">🍦Ice Cream Tracker</div>
+		<div id="header">🎯 Tracker</div>
 		<div class="count-line" id="icecream-count">🍦 Ice Creams: Loading...</div>
 		<div class="count-line" id="chest-count">🎁 Summer Chests: Loading...</div>
 		<div class="count-line" id="icecream-sold" style="display: none;">🧾 Ice Creams Sold: 0</div>
+		<div class="count-line" id="seller-title" style="display: none;"></div>
+
+		
 
 		<button id="settings-toggle" style="margin-top: 10px;">⚙️ Settings</button>
 
@@ -28,20 +31,12 @@
 				<input type="checkbox" id="chests-toggle" />
 				Enable Chests Opening Mode
 			</label>
+			<label><input type="checkbox" id="delivery-toggle"> Enable Delivery Mode</label>
 		</div>
 
 		<div id="debug-console"></div>
 		<div id="resize-handle"></div>
 	</div>
-
-	<div id="chest-ui">
-		<div id="chest-ui-header" style="font-weight: 600; color: #90caff; cursor: move;">
-			📦 Chest Rewards
-		</div>
-		<div id="chest-ui-list" style="margin-top: 6px;"></div>
-		<button id="clear-chest-log" style="margin-top: 6px; font-size: 12px;">Clear List</button>
-	</div>
-
 
 	<script src="script.js"></script>
 </body>
