@@ -8,7 +8,6 @@ const settingsToggleBtn = document.getElementById("settings-toggle");
 const settingsPanel = document.getElementById("settings-panel");
 const sellingToggle = document.getElementById("selling-toggle");
 const debugToggle = document.getElementById("debug-toggle");
-const chestsToggle = document.getElementById("chests-toggle");
 const sellerTitleDisplay = document.getElementById("seller-title");
 
 if (sellerTitleDisplay) {
@@ -20,14 +19,13 @@ if (sellerTitleDisplay) {
 let totalSold = null;
 let sellingMode = false;
 let summerChestCount = 0;
-let chestOpeningActive = false;
 
 const SELLER_TITLES = [
   { amount: 10, title: "🍦 Vanilla Swirl 🍦" },
   { amount: 50, title: "🍦 Neapolitan 🍦" },
   { amount: 75, title: "🍫 Chocolate Chip 🍫" },
   { amount: 150, title: "Scoop there it is!" },
-  { amount: 250, title: "🧊 Brain Freeze 🧊" },
+  { amount: 250, title: "💨 Brain Freeze 💨" },
   { amount: 500, title: "🍍 Tropical Twist 🍍" },
   { amount: 1000, title: "🏆 Summer Legend 🏆" }
 ];
@@ -57,10 +55,9 @@ function sleepUntil(predicate, interval = 50, timeout = 5000) {
 }
 
 async function openChestsLoop() {
-  logDebug("⚡ Starting menu-based open sequence...");
-
+  logDebug("\u26a1 Starting menu-based open sequence...");
   window.parent.postMessage({ type: "sendCommand", command: "rm_inventory" }, "*");
-  logDebug("📡 Sent rm_inventory. Waiting for menu choices to populate...");
+  logDebug("📱 Sent rm_inventory. Waiting for menu choices to populate...");
   await sleep(500);
 
   let success = false;
@@ -72,9 +69,10 @@ async function openChestsLoop() {
       await sleepUntil(() => {
         const choices = window.state?.cache?.menu_choices ?? [];
         return choices.some(choice =>
-          choice[0]?.replace(/(<.+?>)|(&#.+?;)/g, '') === 'Treasure Chest [Summer 2025]'
+          choice[0]?.replace(/(<.+?>)|(&#.+?;)/g, '').includes('Treasure Chest')
         );
-      }, 40, 4000);
+      }, 40, 6000);
+
 
       const targetOption = (window.state.cache.menu_choices ?? []).find(
         c => c[0]?.replace(/(<.+?>)|(&#.+?;)/g, '') === 'Treasure Chest [Summer 2025]'
@@ -117,10 +115,8 @@ async function openChestsLoop() {
   }
 }
 
-
-
 function updateSoldDisplay() {
-  soldDisplay.textContent = `🧾 Ice Creams Sold: ${totalSold}`;
+  soldDisplay.textContent = `💰Ice Creams Sold: ${totalSold}`;
   if (sellerTitleDisplay) {
     const next = SELLER_TITLES.find(t => totalSold < t.amount);
     if (next) {
@@ -134,13 +130,11 @@ function updateSoldDisplay() {
   }
 }
 
-
-
 const savedX = localStorage.getItem("tracker_x");
 const savedY = localStorage.getItem("tracker_y");
 if (savedX && savedY) {
-	tracker.style.left = savedX + "px";
-	tracker.style.top = savedY + "px";
+  tracker.style.left = savedX + "px";
+  tracker.style.top = savedY + "px";
 }
 
 sellingToggle.checked = localStorage.getItem("selling_mode") === "true";
@@ -151,90 +145,92 @@ sellerTitleDisplay.style.display = sellingMode ? "block" : "none";
 debugToggle.checked = localStorage.getItem("debug_enabled") === "true";
 debugConsole.style.display = debugToggle.checked ? "block" : "none";
 
-chestsToggle.checked = localStorage.getItem("chests_enabled") === "true";
-
 sellingToggle.addEventListener("change", (e) => {
-	sellingMode = e.target.checked;
-	localStorage.setItem("selling_mode", sellingMode);
-	soldDisplay.style.display = sellingMode ? "block" : "none";
-	sellerTitleDisplay.style.display = sellingMode ? "block" : "none";
+  sellingMode = e.target.checked;
+  localStorage.setItem("selling_mode", sellingMode);
+  soldDisplay.style.display = sellingMode ? "block" : "none";
+  sellerTitleDisplay.style.display = sellingMode ? "block" : "none";
 });
-
 
 debugToggle.addEventListener("change", (e) => {
-	localStorage.setItem("debug_enabled", e.target.checked);
-	document.getElementById("debug-console").style.display = e.target.checked ? "block" : "none";
-});
-
-chestsToggle.addEventListener("change", async (e) => {
-	const enabled = e.target.checked;
-	localStorage.setItem("chests_enabled", enabled);
-
-	if (enabled) {
-		chestOpeningActive = true;
-		await openChestsLoop();
-	} else {
-		chestOpeningActive = false;
-	}
+  localStorage.setItem("debug_enabled", e.target.checked);
+  document.getElementById("debug-console").style.display = e.target.checked ? "block" : "none";
 });
 
 settingsToggleBtn.addEventListener("click", () => {
-	settingsPanel.style.display = settingsPanel.style.display === "none" ? "block" : "none";
+  settingsPanel.style.display = settingsPanel.style.display === "none" ? "block" : "none";
 });
 
-let isDragging = false, isChestDragging = false, isResizing = false;
-let offsetX = 0, offsetY = 0, chestOffsetX = 0, chestOffsetY = 0;
+let isDragging = false, isResizing = false;
+let offsetX = 0, offsetY = 0;
 let startWidth, startHeight, startX, startY;
 
 tracker.addEventListener("mousedown", (e) => {
-	if (e.target.closest("#resize-handle")) return;
-	if (e.target.id === "header") {
-		isDragging = true;
-		offsetX = e.clientX - tracker.offsetLeft;
-		offsetY = e.clientY - tracker.offsetTop;
-		tracker.style.cursor = "grabbing";
-	}
+  if (e.target.closest("#resize-handle")) return;
+  if (e.target.id === "header") {
+    isDragging = true;
+    offsetX = e.clientX - tracker.offsetLeft;
+    offsetY = e.clientY - tracker.offsetTop;
+    tracker.style.cursor = "grabbing";
+  }
 });
 
 document.addEventListener("mouseup", () => {
-	if (isDragging) {
-		localStorage.setItem("tracker_x", tracker.offsetLeft);
-		localStorage.setItem("tracker_y", tracker.offsetTop);
-	}
-	isDragging = false;
-	tracker.style.cursor = "grab";
-
-	isResizing = false;
+  if (isDragging) {
+    localStorage.setItem("tracker_x", tracker.offsetLeft);
+    localStorage.setItem("tracker_y", tracker.offsetTop);
+  }
+  isDragging = false;
+  tracker.style.cursor = "grab";
+  isResizing = false;
 });
 
 document.addEventListener("mousemove", (e) => {
-	if (isDragging) {
-		tracker.style.left = `${e.clientX - offsetX}px`;
-		tracker.style.top = `${e.clientY - offsetY}px`;
-	}
-	if (isResizing) {
-		tracker.style.width = startWidth + (e.clientX - startX) + "px";
-		tracker.style.height = startHeight + (e.clientY - startY) + "px";
-	}
+  if (isDragging) {
+    tracker.style.left = `${e.clientX - offsetX}px`;
+    tracker.style.top = `${e.clientY - offsetY}px`;
+  }
+  if (isResizing) {
+    tracker.style.width = startWidth + (e.clientX - startX) + "px";
+    tracker.style.height = startHeight + (e.clientY - startY) + "px";
+  }
 });
 
 resizeHandle.addEventListener("mousedown", (e) => {
-	e.preventDefault();
-	isResizing = true;
-	startWidth = tracker.offsetWidth;
-	startHeight = tracker.offsetHeight;
-	startX = e.clientX;
-	startY = e.clientY;
+  e.preventDefault();
+  isResizing = true;
+  startWidth = tracker.offsetWidth;
+  startHeight = tracker.offsetHeight;
+  startX = e.clientX;
+  startY = e.clientY;
 });
 
 window.addEventListener("keydown", (e) => {
-	if (e.key === "Escape") {
-		window.parent.postMessage({ type: "pin" }, "*");
-	}
+  if (e.key === "Escape") {
+    window.parent.postMessage({ type: "pin" }, "*");
+  }
 });
 
-window.addEventListener("message", (event) => {
-  const msg = event.data?.data;
+window.addEventListener("message", async (event) => {
+  const raw = event.data;
+  const msg = raw?.data || raw;
+  const note = msg?.notification || msg?.data?.notification;
+
+  console.log("🥪 Full message received:", raw);
+
+  const data = raw?.data || raw;
+  if (
+    data &&
+    typeof data === "object" &&
+    "trigger_open_chests" in data &&
+    Object.keys(data).length === 1 &&
+    typeof data.trigger_open_chests === "number"
+  ) {
+    logDebug("🎯 'Open Chest' keybind manually triggered!");
+    await openChestsLoop();
+  }
+
+
 
   if (!window.state) window.state = { cache: {} };
 
@@ -254,11 +250,9 @@ window.addEventListener("message", (event) => {
           window.state.cache.menu_choices = [];
           logDebug("⚠️ Failed to parse menu_choices.");
         }
-
       } else if (key === 'menu_open') {
         window.state.cache.menu_open = value;
         logDebug(value ? "📂 Menu has opened." : "📪 Menu closed.");
-      
       } else {
         window.state.cache[key] = value;
       }
@@ -280,23 +274,27 @@ window.addEventListener("message", (event) => {
     }
   }
 
-  if (msg?.data?.notification) {
-    const note = msg.data.notification;
+  if (note) {
     logDebug("📨 Notification field: " + note);
 
-    if (sellingMode) {
-      const match = note.match(/Total sold: (\d+)/);
+    if (sellingMode && typeof note === "string") {
+      const match = note.match(/You sold \d+ ice cream\(s\)! Total sold: (\d+)/i);
       if (match) {
         const sold = parseInt(match[1]);
-        totalSold = totalSold === null ? sold : Math.max(totalSold + 1, sold);
+        totalSold = sold;
         updateSoldDisplay();
+        logDebug("🍦 Sale detected. Updated totalSold to " + totalSold);
       }
     }
   }
 });
 
-
 window.addEventListener("DOMContentLoaded", () => {
-	window.parent.postMessage({ type: "getData" }, "*");
-	logDebug("✅ Debug console initialized and working.");
+  window.parent.postMessage({ type: "getData" }, "*");
+  window.parent.postMessage({
+    type: "registerTrigger",
+    trigger: "open_chests",
+    name: "Open Summer Chest"
+  }, "*");
+  logDebug("✅ Debug console initialized and working.");
 });
